@@ -1,0 +1,19 @@
+[project]
+name = "rtdb-rules-tester"
+version = "0.1.0"
+description = "Host-side tester for Firebase Realtime Database security rules"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

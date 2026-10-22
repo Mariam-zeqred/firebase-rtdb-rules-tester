@@ -1,0 +1,28 @@
+# secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+serviceAccount*.json
+.firebaserc
+firebase-debug.log
+database-debug.log
+ui-debug.log
+emulator.log
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+
+# node (firebase-tools if installed locally)
+node_modules/
+package-lock.json
+
+# data over 10 MB never belongs here
+*.zip
+*.tar.gz

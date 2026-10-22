@@ -1,0 +1,49 @@
+[
+  {
+    "name": "anonymous read of the whole database",
+    "why": "With open rules anyone who knows the database URL can download everything; this is the weakness being fixed.",
+    "auth": null,
+    "op": "read",
+    "path": "/",
+    "expect": "deny"
+  },
+  {
+    "name": "anonymous read of a device status",
+    "auth": null,
+    "op": "read",
+    "path": "/devices/hive-1C5A00/status",
+    "expect": "deny"
+  },
+  {
+    "name": "anonymous write of a device status",
+    "auth": null,
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "heater": false },
+    "expect": "deny"
+  },
+  {
+    "name": "anonymous sets a target temperature",
+    "auth": null,
+    "op": "write",
+    "path": "/devices/hive-1C5A00/control/targetTemp",
+    "value": 40,
+    "expect": "deny"
+  },
+  {
+    "name": "anonymous deletes everything",
+    "why": "Writing null at the root wipes the database under open rules.",
+    "auth": null,
+    "op": "write",
+    "path": "/",
+    "value": null,
+    "expect": "deny"
+  },
+  {
+    "name": "anonymous reads the list of users",
+    "auth": null,
+    "op": "read",
+    "path": "/users",
+    "expect": "deny"
+  }
+]

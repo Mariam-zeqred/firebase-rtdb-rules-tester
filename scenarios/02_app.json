@@ -1,0 +1,142 @@
+[
+  {
+    "name": "owner reads device status",
+    "why": "The Flutter app shows live telemetry to the person who owns the incubator.",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "read",
+    "path": "/devices/hive-1C5A00/status",
+    "expect": "allow"
+  },
+  {
+    "name": "owner reads device history",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "read",
+    "path": "/devices/hive-1C5A00/history",
+    "expect": "allow"
+  },
+  {
+    "name": "owner sets the target temperature",
+    "why": "Normal app control: 34.5 C is inside the 20-40 C band.",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/control/targetTemp",
+    "value": 34.5,
+    "expect": "allow"
+  },
+  {
+    "name": "owner sets a dangerous target temperature",
+    "why": "60 C would kill the queens; the band in the rules is a last line of defence behind the firmware's own clamp.",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/control/targetTemp",
+    "value": 60,
+    "expect": "deny"
+  },
+  {
+    "name": "owner writes settings",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/settings",
+    "value": { "name": "Queen bank 1 (shed)", "alertHigh": 39, "alertLow": 28 },
+    "expect": "allow"
+  },
+  {
+    "name": "owner writes control and settings in one update",
+    "why": "A multi-location update is checked path by path; both are owner-writable.",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "update",
+    "path": "/devices/hive-1C5A00",
+    "values": { "control/targetTemp": 33, "control/updatedBy": "uid-owner-1", "settings/alertHigh": 38 },
+    "expect": "allow"
+  },
+  {
+    "name": "owner update that also touches status",
+    "why": "One forbidden path fails the whole multi-location update.",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "update",
+    "path": "/devices/hive-1C5A00",
+    "values": { "control/targetTemp": 33, "status/temp": 20 },
+    "expect": "deny"
+  },
+  {
+    "name": "owner writes updatedBy with someone else's uid",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/control/updatedBy",
+    "value": "uid-owner-2",
+    "expect": "deny"
+  },
+  {
+    "name": "owner writes the device status",
+    "why": "Owners read telemetry, they do not forge it.",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "heater": false },
+    "expect": "deny"
+  },
+  {
+    "name": "non-owner reads another person's device",
+    "why": "uid-owner-2 owns hive-2B7F10 only.",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "read",
+    "path": "/devices/hive-1C5A00/status",
+    "expect": "deny"
+  },
+  {
+    "name": "non-owner sets another person's target temperature",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/control/targetTemp",
+    "value": 25,
+    "expect": "deny"
+  },
+  {
+    "name": "non-owner writes another person's settings",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/settings/name",
+    "value": "mine now",
+    "expect": "deny"
+  },
+  {
+    "name": "user adds themselves as owner of another device",
+    "why": "No .write rule exists under owners; only the Admin SDK (which bypasses rules) provisions ownership.",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/owners/uid-owner-2",
+    "value": true,
+    "expect": "deny"
+  },
+  {
+    "name": "user bookmarks a device they own",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "write",
+    "path": "/users/uid-owner-2/devices/hive-2B7F10",
+    "value": true,
+    "expect": "allow"
+  },
+  {
+    "name": "user bookmarks a device they do not own",
+    "why": "The .validate rule checks the device's owners list, so the user list cannot claim foreign devices.",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "write",
+    "path": "/users/uid-owner-2/devices/hive-1C5A00",
+    "value": true,
+    "expect": "deny"
+  },
+  {
+    "name": "user reads another user's device list",
+    "auth": { "uid": "uid-owner-2" },
+    "op": "read",
+    "path": "/users/uid-owner-1",
+    "expect": "deny"
+  },
+  {
+    "name": "user reads their own device list",
+    "auth": { "uid": "uid-owner-1" },
+    "op": "read",
+    "path": "/users/uid-owner-1/devices",
+    "expect": "allow"
+  }
+]

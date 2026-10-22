@@ -1,0 +1,25 @@
+{
+  "devices": {
+    "hive-1C5A00": {
+      "owners": { "uid-owner-1": true },
+      "status": {
+        "ts": 1791021711, "temp": 26.87, "hum": 81.5, "tempOut": 27.25, "humOut": 52.9,
+        "targetTemp": 32.0, "heater": false, "door": "shut", "fw": "1.1.3"
+      },
+      "history": {
+        "1791021711": { "ts": 1791021711, "temp": 26.87, "hum": 81.5, "tempOut": 27.25, "humOut": 52.9, "targetTemp": 32.0, "heater": false, "door": "shut" }
+      },
+      "control": { "targetTemp": 32.0, "heaterOverride": "auto", "updatedBy": "uid-owner-1" },
+      "settings": { "name": "Queen bank 1", "alertHigh": 40, "alertLow": 25 }
+    },
+    "hive-2B7F10": {
+      "owners": { "uid-owner-2": true },
+      "status": { "ts": 1791021720, "temp": 31.4, "hum": 70.2, "heater": true, "door": "shut" },
+      "control": { "targetTemp": 34.5, "heaterOverride": "auto", "updatedBy": "uid-owner-2" }
+    }
+  },
+  "users": {
+    "uid-owner-1": { "devices": { "hive-1C5A00": true } },
+    "uid-owner-2": { "devices": { "hive-2B7F10": true } }
+  }
+}

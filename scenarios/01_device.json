@@ -1,0 +1,144 @@
+[
+  {
+    "name": "device writes its own status",
+    "why": "The normal 15 s telemetry write from the firmware, authenticated with the device's own token.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "tempOut": 27.3, "humOut": 52.8, "targetTemp": 32.0, "heater": true, "door": "shut", "fw": "1.1.3" },
+    "expect": "allow"
+  },
+  {
+    "name": "device writes another device's status",
+    "why": "A stolen or cloned device token must not be able to impersonate a different incubator.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-2B7F10/status",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "heater": true },
+    "expect": "deny"
+  },
+  {
+    "name": "device updates one field of its status",
+    "why": "A single-child write; the parent's hasChildren .validate sees the merged data, so it passes because the status already exists.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status/heater",
+    "value": true,
+    "expect": "allow"
+  },
+  {
+    "name": "device writes a partial status to a fresh node",
+    "why": "On a device with no status yet, a write missing 'hum' and 'heater' fails the hasChildren rule.",
+    "auth": { "uid": "dev-hive-9F0001", "token": { "device": true, "deviceId": "hive-9F0001" } },
+    "op": "write",
+    "path": "/devices/hive-9F0001/status",
+    "value": { "ts": 1791021726, "temp": 26.9 },
+    "expect": "deny"
+  },
+  {
+    "name": "device writes an out-of-range temperature",
+    "why": "A broken SHT31 reports -45 or 130; the rule keeps garbage out of the database.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": 130.0, "hum": 81.4, "heater": false },
+    "expect": "deny"
+  },
+  {
+    "name": "device writes a status with an unknown field",
+    "why": "Schema drift: the $other rule rejects fields the apps do not know about.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "heater": false, "wifiPassword": "oops" },
+    "expect": "deny"
+  },
+  {
+    "name": "device writes a status with a far-future timestamp",
+    "why": "ts must be at most 5 minutes ahead of the server clock; 4102444800 is the year 2100.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 4102444800, "temp": 26.9, "hum": 81.4, "heater": false },
+    "expect": "deny"
+  },
+  {
+    "name": "device writes a status with a string temperature",
+    "why": "Type check: '26.9' is a string, not a number.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": "26.9", "hum": 81.4, "heater": false },
+    "expect": "deny"
+  },
+  {
+    "name": "device appends a history entry",
+    "why": "History keys are 10-digit epoch seconds and the entry must not exist yet.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/history/1791021726",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "tempOut": 27.3, "humOut": 52.8, "targetTemp": 32.0, "heater": true, "door": "shut" },
+    "expect": "allow"
+  },
+  {
+    "name": "device overwrites an existing history entry",
+    "why": "History is append-only: a compromised device cannot rewrite the record.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/history/1791021711",
+    "value": { "ts": 1791021711, "temp": 99.0, "hum": 1.0 },
+    "expect": "deny"
+  },
+  {
+    "name": "device deletes a history entry",
+    "why": "Writing null is a delete; the .write rule requires newData.exists().",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/history/1791021711",
+    "value": null,
+    "expect": "deny"
+  },
+  {
+    "name": "device appends history under a malformed key",
+    "why": "A push() key or a millisecond timestamp is refused, so the history stays sortable by second.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/history/-NxQ7abc",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4 },
+    "expect": "deny"
+  },
+  {
+    "name": "device reads its own control node",
+    "why": "The firmware polls /control for the target temperature; the device may read its own subtree.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "read",
+    "path": "/devices/hive-1C5A00/control",
+    "expect": "allow"
+  },
+  {
+    "name": "device writes its own control node",
+    "why": "Only an owner may set the target temperature; a device must not be able to raise its own setpoint.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/control/targetTemp",
+    "value": 38.8,
+    "expect": "deny"
+  },
+  {
+    "name": "device reads another device",
+    "why": "One device's token gives no visibility into other incubators.",
+    "auth": { "uid": "dev-hive-1C5A00", "token": { "device": true, "deviceId": "hive-1C5A00" } },
+    "op": "read",
+    "path": "/devices/hive-2B7F10/status",
+    "expect": "deny"
+  },
+  {
+    "name": "token without the device claim writes status",
+    "why": "A plain user token that happens to carry a deviceId claim is still not a device.",
+    "auth": { "uid": "uid-owner-1", "token": { "deviceId": "hive-1C5A00" } },
+    "op": "write",
+    "path": "/devices/hive-1C5A00/status",
+    "value": { "ts": 1791021726, "temp": 26.9, "hum": 81.4, "heater": false },
+    "expect": "deny"
+  }
+]

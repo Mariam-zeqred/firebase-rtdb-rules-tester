@@ -1,0 +1,71 @@
+{
+  "rules": {
+    "devices": {
+      "$deviceId": {
+        ".read": "auth !== null && (auth.token.deviceId === $deviceId || root.child('devices').child($deviceId).child('owners').child(auth.uid).val() === true)",
+
+        "status": {
+          ".write": "auth !== null && auth.token.device === true && auth.token.deviceId === $deviceId",
+          ".validate": "newData.hasChildren(['ts', 'temp', 'hum', 'heater'])",
+          "ts":         { ".validate": "newData.isNumber() && newData.val() > 1700000000 && newData.val() < now / 1000 + 300" },
+          "temp":       { ".validate": "newData.isNumber() && newData.val() > -40 && newData.val() < 125" },
+          "hum":        { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+          "tempOut":    { ".validate": "newData.isNumber() && newData.val() > -40 && newData.val() < 125" },
+          "humOut":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+          "targetTemp": { ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 40" },
+          "heater":     { ".validate": "newData.isBoolean()" },
+          "door":       { ".validate": "newData.val() === 'open' || newData.val() === 'shut'" },
+          "fw":         { ".validate": "newData.isString() && newData.val().length <= 32" },
+          "$other":     { ".validate": false }
+        },
+
+        "history": {
+          "$ts": {
+            ".write": "auth !== null && auth.token.device === true && auth.token.deviceId === $deviceId && !data.exists() && newData.exists()",
+            ".validate": "$ts.matches(/^[0-9]{10}$/) && newData.hasChildren(['ts', 'temp', 'hum'])",
+            "ts":         { ".validate": "newData.isNumber() && newData.val() > 1700000000 && newData.val() < now / 1000 + 300" },
+            "temp":       { ".validate": "newData.isNumber() && newData.val() > -40 && newData.val() < 125" },
+            "hum":        { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+            "tempOut":    { ".validate": "newData.isNumber() && newData.val() > -40 && newData.val() < 125" },
+            "humOut":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+            "targetTemp": { ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 40" },
+            "heater":     { ".validate": "newData.isBoolean()" },
+            "door":       { ".validate": "newData.val() === 'open' || newData.val() === 'shut'" },
+            "$other":     { ".validate": false }
+          }
+        },
+
+        "control": {
+          ".write": "auth !== null && root.child('devices').child($deviceId).child('owners').child(auth.uid).val() === true",
+          "targetTemp":     { ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 40" },
+          "heaterOverride": { ".validate": "newData.val() === 'auto' || newData.val() === 'off'" },
+          "updatedBy":      { ".validate": "newData.val() === auth.uid" },
+          "$other":         { ".validate": false }
+        },
+
+        "settings": {
+          ".write": "auth !== null && root.child('devices').child($deviceId).child('owners').child(auth.uid).val() === true",
+          "name":      { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "alertHigh": { ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 45" },
+          "alertLow":  { ".validate": "newData.isNumber() && newData.val() >= 10 && newData.val() <= 40" },
+          "$other":    { ".validate": false }
+        },
+
+        "owners": {
+          "$uid": { ".validate": "newData.val() === true" }
+        }
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth !== null && auth.uid === $uid",
+        ".write": "auth !== null && auth.uid === $uid",
+        "devices": {
+          "$deviceId": { ".validate": "newData.val() === true && root.child('devices').child($deviceId).child('owners').child($uid).val() === true" }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
