@@ -103,7 +103,7 @@ server when a device is claimed; the client SDK cannot grant ownership.
 
 `scenarios/seed.json` is the database content before each scenario. The device node is a real reading
 from the incubator export in
-[incubator-telemetry-analysis](https://github.com/Mariam-zeqred/incubator-telemetry-analysis)
+the `incubator-telemetry-analysis` repository (private since 2026-11-21)
 (`hive-1C5A00`, 3 Oct 2026); the user ids and the second device are placeholders. Each scenario is one
 JSON object:
 
